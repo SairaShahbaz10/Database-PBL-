@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ETMS — E-Sports Tournament Management System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{--bg:#0a0e1a;--surf:#111827;--card:#1a2236;--border:#243048;--gold:#f0a500;--gold2:#ffc845;--teal:#00c8a0;--rose:#ff4d6d;--indigo:#6366f1;--text:#e8edf5;--muted:#7a8aaa;--glow-g:0 0 24px rgba(0,200,160,.18);--glow-a:0 0 24px rgba(240,165,0,.18)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:230px;background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sidebar-logo{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border)}
+.logo-text{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;letter-spacing:1px;background:linear-gradient(120deg,var(--gold) 0%,var(--teal) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:.68rem;color:var(--muted);margin-top:2px;letter-spacing:.5px}
+.nav-section{padding:.75rem .75rem .25rem;font-size:.65rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.nav-btn{display:flex;align-items:center;gap:.7rem;width:100%;padding:.6rem 1rem;border:none;background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.85rem;cursor:pointer;border-radius:8px;margin:.1rem .5rem;width:calc(100% - 1rem);transition:all .18s;text-align:left}
+.nav-btn:hover{color:var(--text);background:var(--card)}.nav-btn.active{color:var(--gold);background:rgba(240,165,0,.1);font-weight:600}
+.nav-btn .icon{font-size:1rem;width:20px;text-align:center}
+.main{margin-left:230px;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,14,26,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.topbar-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--text)}
+.search-wrap{position:relative;flex:1;max-width:340px}
+.search-wrap input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:.5rem .9rem .5rem 2.4rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:border-color .2s}
+.search-wrap input:focus{outline:none;border-color:var(--gold)}
+.search-wrap::before{content:'🔍';position:absolute;left:.7rem;top:50%;transform:translateY(-50%);font-size:.8rem}
+#search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;display:none;z-index:200;max-height:300px;overflow-y:auto}
+#search-results.open{display:block}
+.sr-group{padding:.5rem .75rem .25rem;font-size:.65rem;color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.sr-item{padding:.5rem .75rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:background .15s}.sr-item:hover{background:var(--border);color:var(--text)}
+.page{display:none;padding:2rem}.page.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem}
+.ph h2{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700}.ph h2 em{color:var(--gold);font-style:normal}
+.ph-actions{display:flex;gap:.75rem;align-items:center}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:1rem;margin-bottom:2rem}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.4rem;transition:border-color .2s,box-shadow .2s;cursor:default;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal))}
+.kpi:hover{border-color:var(--gold);box-shadow:var(--glow-a)}
+.kpi .kv{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;color:var(--gold)}.kpi .kl{font-size:.72rem;color:var(--muted);margin-top:.3rem;font-weight:500;letter-spacing:.5px;text-transform:uppercase}.kpi .ki{font-size:1.6rem;float:right;opacity:.25;margin-top:-2.2rem}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.25rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;transition:border-color .2s,transform .15s}.card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.card-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem}
+.card-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:rgba(240,165,0,.1)}
+.card-name{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700}.card-sub{font-size:.75rem;color:var(--muted);margin-top:.1rem}
+.card-meta{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.75rem}
+.meta-item{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.3rem}.meta-item span{color:var(--text);font-weight:500}
+.card-actions{display:flex;gap:.5rem;margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border)}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead{background:rgba(240,165,0,.05)}
+th{padding:.85rem 1rem;text-align:left;font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.8px;color:var(--gold);border-bottom:1px solid var(--border)}
+td{padding:.75rem 1rem;border-bottom:1px solid rgba(36,48,72,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}tr:hover td{background:rgba(240,165,0,.03)}
+.btn{padding:.5rem 1.1rem;border-radius:9px;border:none;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-gold{background:var(--gold);color:#000}.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-teal{background:rgba(0,200,160,.15);color:var(--teal);border:1px solid rgba(0,200,160,.3)}.btn-teal:hover{background:var(--teal);color:#000}
+.btn-rose{background:rgba(255,77,109,.12);color:var(--rose);border:1px solid rgba(255,77,109,.3)}.btn-rose:hover{background:var(--rose);color:#fff}
+.btn-ghost{background:var(--border);color:var(--text)}.btn-ghost:hover{background:#2d3d5a}
+.btn-sm{padding:.3rem .75rem;font-size:.75rem}
+.badge{display:inline-block;padding:.18rem .6rem;border-radius:20px;font-size:.7rem;font-weight:700;letter-spacing:.3px}
+.badge-pro{background:rgba(99,102,241,.2);color:#a5b4fc;border:1px solid rgba(99,102,241,.4)}
+.badge-ama{background:rgba(240,165,0,.15);color:var(--gold);border:1px solid rgba(240,165,0,.35)}
+.badge-win{background:rgba(0,200,160,.15);color:var(--teal);border:1px solid rgba(0,200,160,.3)}
+.badge-completed{background:rgba(0,200,160,.12);color:var(--teal);border:1px solid rgba(0,200,160,.3)}
+.badge-ongoing{background:rgba(240,165,0,.15);color:var(--gold);border:1px solid rgba(240,165,0,.35)}
+.badge-upcoming{background:rgba(99,102,241,.12);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)}
+.badge-event{background:rgba(99,102,241,.15);color:#a5b4fc}.badge-result{background:rgba(0,200,160,.15);color:var(--teal)}.badge-sponsor{background:rgba(240,165,0,.15);color:var(--gold)}.badge-update{background:rgba(36,48,72,.8);color:var(--muted)}
+.overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center}.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;width:min(500px,92vw);max-height:87vh;overflow-y:auto}
+.modal h3{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;color:var(--gold);margin-bottom:1.25rem}
+.fg{margin-bottom:.9rem}.fg label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:.35rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--surf);border:1px solid var(--border);color:var(--text);padding:.6rem .9rem;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--gold)}.fg select option{background:var(--card)}.fg textarea{resize:vertical;min-height:70px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}.modal-footer{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem}
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;background:var(--teal);color:#000;padding:.75rem 1.4rem;border-radius:12px;font-weight:600;font-size:.88rem;display:none;box-shadow:0 8px 30px rgba(0,200,160,.3)}
+#toast.err{background:var(--rose);color:#fff;box-shadow:0 8px 30px rgba(255,77,109,.3)}
+.rk{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.82rem}
+.rk-1{background:linear-gradient(135deg,#f0a500,#ffc845);color:#000}.rk-2{background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#000}.rk-3{background:linear-gradient(135deg,#b45309,#d97706);color:#fff}.rk-n{background:var(--border);color:var(--muted)}
+.bar-wrap{margin-top:4px;height:4px;background:var(--border);border-radius:2px}.bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .6s}
+.tabs{display:flex;gap:.25rem;margin-bottom:1.5rem;background:var(--card);padding:.35rem;border-radius:12px;width:fit-content}
+.tab{padding:.45rem 1rem;border-radius:9px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .18s}.tab.active{background:var(--gold);color:#000;font-weight:700}
+.player-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;transition:border-color .2s,transform .15s}.player-card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.pc-top{display:flex;align-items:center;gap:.85rem}
+.pc-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:#000;flex-shrink:0}
+.pc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}.pc-role{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.pc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.pc-stat .v{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--gold)}.pc-stat .l{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.match-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s}.match-card:hover{border-color:var(--gold)}
+.match-top{background:rgba(240,165,0,.06);padding:.6rem 1rem;display:flex;justify-content:space-between;align-items:center}
+.match-top .mt-tour{font-size:.72rem;color:var(--gold);font-weight:700;letter-spacing:.5px;text-transform:uppercase}.match-top .mt-date{font-size:.72rem;color:var(--muted)}
+.match-body{padding:1rem}.vs-row{display:flex;align-items:center;justify-content:space-between}
+.vs-team{flex:1;text-align:center}.vs-team-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}.vs-team-sub{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+.vs-divider{font-family:'Syne',sans-serif;font-weight:800;color:var(--muted);padding:0 .75rem;font-size:1rem}
+.match-footer{padding:.6rem 1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.mf-info{font-size:.72rem;color:var(--muted)}
+.tour-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s,transform .15s}.tour-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.tour-banner{padding:1.25rem;background:linear-gradient(135deg,rgba(240,165,0,.12),rgba(0,200,160,.08))}
+.tour-game{font-size:.7rem;color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:.3rem}
+.tour-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem}.tour-prize{font-size:1.3rem;font-weight:800;color:var(--gold);font-family:'Syne',sans-serif;margin-top:.4rem}
+.tour-body{padding:1rem}.tour-meta{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.85rem}.tour-meta-item{font-size:.75rem;color:var(--muted)}.tour-meta-item span{color:var(--text);font-weight:500}
+.tour-sponsors{font-size:.72rem;color:var(--muted);line-height:1.5}
+.sponsor-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:.7rem;transition:border-color .2s}.sponsor-card:hover{border-color:var(--gold)}
+.sc-head{display:flex;align-items:center;justify-content:space-between}.sc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem}.sc-amount{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--gold)}.sc-cat{font-size:.7rem;color:var(--muted);margin-top:.1rem}.sc-tours{font-size:.72rem;color:var(--muted);line-height:1.6}
+.ann-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;gap:1rem;align-items:flex-start;transition:border-color .2s;margin-bottom:.85rem}.ann-card:hover{border-color:var(--teal)}
+.ann-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:.4rem}
+.ann-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:.2rem}.ann-body{font-size:.8rem;color:var(--muted);line-height:1.5}
+.ann-foot{display:flex;gap:.75rem;align-items:center;margin-top:.5rem}.ann-date{font-size:.68rem;color:var(--muted)}
+.lb-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s;margin-bottom:.6rem}
+.lb-card.top1{border-color:var(--gold);background:rgba(240,165,0,.06)}.lb-card.top2{border-color:#94a3b8}.lb-card.top3{border-color:#b45309}
+.lb-logo{font-size:1.5rem;width:40px;text-align:center}.lb-info{flex:1}.lb-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}.lb-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem}.lb-pts{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--gold)}.lb-wl{font-size:.7rem;color:var(--muted);text-align:right;margin-top:.1rem}
+.pts-bar{flex:1;max-width:120px;height:6px;background:var(--border);border-radius:3px;margin-top:2px}.pts-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--teal));transition:width .7s}
+.coach-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;transition:border-color .2s,transform .15s}.coach-card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.cc-top{display:flex;align-items:center;gap:.85rem;margin-bottom:.85rem}
+.cc-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:#fff;flex-shrink:0}
+.cc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}.cc-team{font-size:.72rem;color:var(--muted);margin-top:.1rem}.cc-meta{display:flex;gap:.75rem;flex-wrap:wrap}
+.ref-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;transition:border-color .2s}.ref-card:hover{border-color:var(--teal)}
+.rc-top{display:flex;align-items:center;gap:.85rem;margin-bottom:.75rem}.rc-name{font-family:'Syne',sans-serif;font-weight:700}.rc-exp{font-size:.72rem;color:var(--muted);margin-top:.1rem}.stars{color:var(--gold);font-size:.8rem}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.info-grid{grid-template-columns:1fr}}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem}
+.info-card h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:1rem}
+.info-card ul{list-style:none}.info-card ul li{padding:.4rem 0;border-bottom:1px solid rgba(36,48,72,.5);font-size:.83rem;color:var(--muted);display:flex;align-items:flex-start;gap:.5rem}.info-card ul li:last-child{border:none}.info-card ul li::before{content:'▸';color:var(--gold);font-size:.7rem;margin-top:.15rem;flex-shrink:0}
+.br-id{font-size:.72rem;color:var(--teal);font-weight:700;font-family:monospace;white-space:nowrap}
+#profile-overlay{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.6)}#profile-overlay.open{display:block}
+#profile-drawer{position:fixed;right:-420px;top:0;bottom:0;width:min(400px,100vw);background:var(--card);border-left:1px solid var(--border);z-index:401;padding:1.75rem;overflow-y:auto;transition:right .3s ease}
+#profile-drawer.open{right:0}
+.profile-close{position:absolute;top:1rem;right:1rem;background:var(--border);border:none;color:var(--text);font-size:1rem;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:10}.profile-close:hover{background:var(--rose);color:#fff}
+.pd-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:#000;margin:1.5rem auto .75rem}
+.pd-name{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;text-align:center}.pd-team{font-size:.8rem;color:var(--muted);text-align:center;margin-top:.25rem}
+.pd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:1.25rem 0;text-align:center}
+.pd-stat{background:var(--surf);border-radius:10px;padding:.75rem .5rem}.pd-stat .v{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--gold)}.pd-stat .l{font-size:.65rem;color:var(--muted);margin-top:.25rem;text-transform:uppercase}
+.pd-section{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin:1.25rem 0 .5rem}
+.pd-row{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.82rem}.pd-row:last-child{border:none}.pd-row .lbl{color:var(--muted)}
+@media(max-width:768px){.sidebar{width:60px}.sidebar-logo .logo-text,.sidebar-logo .logo-sub,.nav-btn span,.nav-section{display:none}.nav-btn{justify-content:center;padding:.6rem}.main{margin-left:60px}}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">ETMS</div><div class="logo-sub">Tournament Manager</div></div>
+  <div class="nav-section">Overview</div>
+  <button class="nav-btn active" onclick="showPage('dashboard')"><span class="icon">🏠</span><span>Dashboard</span></button>
+  <button class="nav-btn" onclick="showPage('news')"><span class="icon">📢</span><span>Announcements</span></button>
+  <button class="nav-btn" onclick="showPage('leaderboard')"><span class="icon">🏆</span><span>Leaderboard</span></button>
+  <div class="nav-section">Management</div>
+  <button class="nav-btn" onclick="showPage('tournaments')"><span class="icon">🎯</span><span>Tournaments</span></button>
+  <button class="nav-btn" onclick="showPage('matches')"><span class="icon">⚔️</span><span>Matches</span></button>
+  <button class="nav-btn" onclick="showPage('teams')"><span class="icon">🛡️</span><span>Teams</span></button>
+  <button class="nav-btn" onclick="showPage('players')"><span class="icon">👤</span><span>Players</span></button>
+  <button class="nav-btn" onclick="showPage('coaches')"><span class="icon">🎓</span><span>Coaches</span></button>
+  <button class="nav-btn" onclick="showPage('referees')"><span class="icon">🔖</span><span>Referees</span></button>
+  <div class="nav-section">Finance</div>
+  <button class="nav-btn" onclick="showPage('sponsors')"><span class="icon">💰</span><span>Sponsors</span></button>
+  <div class="nav-section">Analytics</div>
+  <button class="nav-btn" onclick="showPage('statistics')"><span class="icon">📈</span><span>Player Stats</span></button>
+  <button class="nav-btn" onclick="showPage('teamstats')"><span class="icon">📊</span><span>Team Analysis</span></button>
+  <div class="nav-section">Info</div>
+  <button class="nav-btn" onclick="showPage('about')"><span class="icon">ℹ️</span><span>About</span></button>
+</nav>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="search-wrap">
+      <input type="text" id="global-search" placeholder="Search teams, players, tournaments…" oninput="globalSearch(this.value)" onblur="setTimeout(()=>document.getElementById('search-results').classList.remove('open'),200)">
+      <div id="search-results"></div>
+    </div>
+  </div>
+  <div id="page-dashboard" class="page active">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kv" id="k-teams">10</div><div class="ki">🛡️</div><div class="kl">Teams</div></div>
+      <div class="kpi"><div class="kv" id="k-players">20</div><div class="ki">👤</div><div class="kl">Players</div></div>
+      <div class="kpi"><div class="kv" id="k-matches">10</div><div class="ki">⚔️</div><div class="kl">Matches</div></div>
+      <div class="kpi"><div class="kv" id="k-tours">10</div><div class="ki">🎯</div><div class="kl">Tournaments</div></div>
+      <div class="kpi"><div class="kv">$202K</div><div class="ki">💵</div><div class="kl">Total Prize Pool</div></div>
+      <div class="kpi"><div class="kv">$1.46M</div><div class="ki">💰</div><div class="kl">Sponsor Investment</div></div>
+      <div class="kpi"><div class="kv">136</div><div class="ki">💥</div><div class="kl">Total Kills</div></div>
+      <div class="kpi"><div class="kv">Liam</div><div class="ki">⭐</div><div class="kl">Top Scorer</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+      <div><div class="ph"><h2>Recent <em>Matches</em></h2></div><div id="dash-matches"></div></div>
+      <div><div class="ph"><h2>Latest <em>News</em></h2></div><div id="dash-news"></div></div>
+    </div>
+  </div>
+  <div id="page-news" class="page">
+    <div class="ph"><h2>📢 <em>Announcements</em></h2><button class="btn btn-gold" onclick="openModal('ann-modal')">+ Post</button></div>
+    <div id="ann-list"></div>
+  </div>
+  <div id="page-leaderboard" class="page">
+    <div class="ph"><h2>🏆 <em>Team Leaderboard</em></h2></div>
+    <div id="lb-list"></div>
+  </div>
+  <div id="page-tournaments" class="page">
+    <div class="ph"><h2>🎯 <em>Tournaments</em></h2>
+      <div class="ph-actions">
+        <div class="tabs" id="tour-tabs">
+          <button class="tab active" onclick="filterTours('All',this)">All</button>
+          <button class="tab" onclick="filterTours('Upcoming',this)">Upcoming</button>
+          <button class="tab" onclick="filterTours('Ongoing',this)">Ongoing</button>
+          <button class="tab" onclick="filterTours('Completed',this)">Completed</button>
+        </div>
+        <button class="btn btn-gold" onclick="openModal('tour-modal')">+ Add</button>
+      </div>
+    </div>
+    <div class="card-grid" id="tour-cards"></div>
+  </div>
+  <div id="page-matches" class="page">
+    <div class="ph"><h2>⚔️ <em>Matches</em></h2><button class="btn btn-gold" onclick="openModal('match-modal')">+ Schedule</button></div>
+    <div class="card-grid" id="match-cards"></div>
+  </div>
+  <div id="page-teams" class="page">
+    <div class="ph"><h2>🛡️ <em>Teams</em></h2><button class="btn btn-gold" onclick="openModal('team-modal')">+ Add Team</button></div>
+    <div class="card-grid" id="team-cards"></div>
+  </div>
+  <div id="page-players" class="page">
+    <div class="ph"><h2>👤 <em>Players</em></h2>
+      <div class="ph-actions">
+        <div class="tabs">
+          <button class="tab active" onclick="filterPlayers('All',this)">All</button>
+          <button class="tab" onclick="filterPlayers('Professional',this)">Pro</button>
+          <button class="tab" onclick="filterPlayers('Amateur',this)">Amateur</button>
+        </div>
+        <button class="btn btn-gold" onclick="openModal('player-modal')">+ Add Player</button>
+      </div>
+    </div>
+    <div class="card-grid" id="player-cards"></div>
+  </div>
+  <div id="page-coaches" class="page"><div class="ph"><h2>🎓 <em>Coaches</em></h2></div><div class="card-grid" id="coach-cards"></div></div>
+  <div id="page-referees" class="page">
+    <div class="ph"><h2>🔖 <em>Referees</em></h2><button class="btn btn-gold" onclick="openModal('ref-modal')">+ Add</button></div>
+    <div class="card-grid" id="ref-cards"></div>
+  </div>
+  <div id="page-sponsors" class="page">
+    <div class="ph"><h2>💰 <em>Sponsors</em></h2><button class="btn btn-gold" onclick="openModal('sponsor-modal')">+ Add</button></div>
+    <div class="card-grid" id="sponsor-cards"></div>
+  </div>
+  <div id="page-statistics" class="page">
+    <div class="ph"><h2>📈 <em>Player Performance</em></h2></div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>PLAYER</th><th>TEAM</th><th>ROLE</th><th>KILLS</th><th>DEATHS</th><th>ASSISTS</th><th>KDA</th></tr></thead><tbody id="perf-body"></tbody></table></div>
+  </div>
+  <div id="page-teamstats" class="page">
+    <div class="ph"><h2>📊 <em>Team Analysis</em></h2></div>
+    <div class="table-wrap"><table><thead><tr><th>TEAM</th><th>PLAYERS</th><th>TOTAL KILLS</th><th>TOTAL ASSISTS</th><th>AVG KILLS</th><th>RANKING PTS</th></tr></thead><tbody id="ts-body"></tbody></table></div>
+  </div>
+  <div id="page-about" class="page">
+    <div class="ph"><h2>ℹ️ <em>About ETMS</em></h2></div>
+    <div class="info-grid">
+      <div class="info-card"><h3>PROJECT OBJECTIVES</h3><ul>
+        <li>12-table relational DB for e-sports management</li>
+        <li>EERD with supertype/subtype (Pro/Amateur player)</li>
+        <li>SQL: CREATE TABLE, FK constraints, CASCADE DELETE</li>
+        <li>Advanced queries: JOIN, GROUP BY, HAVING, subqueries</li>
+        <li>Views: TeamLeaderboard &amp; PlayerPerformance</li>
+        <li>Trigger: trg_AddPoints (AFTER INSERT on Matchs)</li>
+        <li>Full CRUD via REST API — Express.js backend</li>
+        <li>Referential integrity across all 12 tables</li>
+      </ul></div>
+      <div class="info-card"><h3>TECH STACK</h3><ul>
+        <li>Node.js + Express.js — REST API server</li>
+        <li>In-memory DB mirroring MySQL relational schema</li>
+        <li>12 tables: all entities from the EERD</li>
+        <li>All SQL logic in server.js (backend only)</li>
+        <li>Vanilla HTML/CSS/JS — zero frameworks</li>
+        <li>Responsive sidebar + player profile drawer</li>
+      </ul></div>
+      <div class="info-card" style="grid-column:1/-1"><h3>BUSINESS RULES</h3><ul>
+        <li><span class="br-id">BR-01</span> Each team must have a unique name and country.</li>
+        <li><span class="br-id">BR-02</span> Every player must belong to exactly one team.</li>
+        <li><span class="br-id">BR-03</span> A player is either Professional or Amateur — not both.</li>
+        <li><span class="br-id">BR-04</span> Professional Players need a salary; Amateur Players need a school name.</li>
+        <li><span class="br-id">BR-05</span> Each team can have only one coach.</li>
+        <li><span class="br-id">BR-06</span> A tournament must have a prize pool before matches are scheduled.</li>
+        <li><span class="br-id">BR-07</span> Each match must be between two different teams.</li>
+        <li><span class="br-id">BR-08</span> Every match must have exactly one assigned referee.</li>
+        <li><span class="br-id">BR-09</span> The winning team must be one of the two participating teams.</li>
+        <li><span class="br-id">BR-10</span> The winning team automatically receives +3 ranking points (trigger).</li>
+        <li><span class="br-id">BR-11</span> A sponsor can fund many tournaments; a tournament can have many sponsors.</li>
+        <li><span class="br-id">BR-12</span> Statistics recorded only for players who participated in that match.</li>
+        <li><span class="br-id">BR-13</span> Referee experience must be zero or greater.</li>
+        <li><span class="br-id">BR-14</span> Deleting a team cascades to remove all related records.</li>
+      </ul></div>
+    </div>
+  </div>
+</div>
+<!-- MODALS -->
+<div class="overlay" id="team-modal"><div class="modal"><h3>🛡️ Add New Team</h3>
+  <div class="fg-row"><div class="fg"><label>Team Name</label><input id="tm-name" placeholder="e.g. Thunder Birds"></div><div class="fg"><label>Country</label><input id="tm-country" placeholder="e.g. Pakistan"></div></div>
+  <div class="fg-row"><div class="fg"><label>Founded Year</label><input id="tm-founded" type="number" placeholder="e.g. 2022"></div><div class="fg"><label>Logo Emoji</label><input id="tm-logo" placeholder="🦅" maxlength="2"></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('team-modal')">Cancel</button><button class="btn btn-gold" onclick="addTeam()">Add Team</button></div>
+</div></div>
+<div class="overlay" id="player-modal"><div class="modal"><h3>👤 Add New Player</h3>
+  <div class="fg-row"><div class="fg"><label>Name</label><input id="pm-name" placeholder="e.g. Zaid"></div><div class="fg"><label>Age</label><input id="pm-age" type="number" placeholder="21"></div></div>
+  <div class="fg-row"><div class="fg"><label>Team</label><select id="pm-team"></select></div><div class="fg"><label>Role</label><select id="pm-role"><option>Sniper</option><option>Assault</option><option>Support</option><option>Tank</option><option>Medic</option><option>Scout</option></select></div></div>
+  <div class="fg"><label>Type</label><select id="pm-type" onchange="togglePlayerFields()"><option value="Professional">Professional</option><option value="Amateur">Amateur</option></select></div>
+  <div id="pm-pro"><div class="fg"><label>Salary ($)</label><input id="pm-salary" type="number" placeholder="55000"></div></div>
+  <div id="pm-ama" style="display:none"><div class="fg"><label>School</label><input id="pm-school" placeholder="e.g. NUTECH"></div></div>
+  <div class="fg"><label>Join Date</label><input id="pm-join" type="date"></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('player-modal')">Cancel</button><button class="btn btn-gold" onclick="addPlayer()">Add Player</button></div>
+</div></div>
+<div class="overlay" id="tour-modal"><div class="modal"><h3>🎯 Add Tournament</h3>
+  <div class="fg"><label>Name</label><input id="to-name" placeholder="e.g. Elite Cup 2027"></div>
+  <div class="fg-row"><div class="fg"><label>Prize Pool ($)</label><input id="to-prize" type="number" placeholder="20000"></div><div class="fg"><label>Game</label><select id="to-game"><option>Valorant</option><option>CS2</option><option>PUBG</option><option>Fortnite</option><option>Apex Legends</option><option>Dota 2</option></select></div></div>
+  <div class="fg-row"><div class="fg"><label>Start Date</label><input id="to-date" type="date"></div><div class="fg"><label>Status</label><select id="to-status"><option>Upcoming</option><option>Ongoing</option><option>Completed</option></select></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('tour-modal')">Cancel</button><button class="btn btn-gold" onclick="addTournament()">Add</button></div>
+</div></div>
+<div class="overlay" id="match-modal"><div class="modal"><h3>⚔️ Schedule Match</h3>
+  <div class="fg"><label>Tournament</label><select id="mm-tour"></select></div>
+  <div class="fg"><label>Map</label><input id="mm-map" placeholder="e.g. Ascent"></div>
+  <div class="fg-row"><div class="fg"><label>Team 1</label><select id="mm-t1"></select></div><div class="fg"><label>Team 2</label><select id="mm-t2"></select></div></div>
+  <div class="fg-row"><div class="fg"><label>Winner</label><select id="mm-winner"></select></div><div class="fg"><label>Referee</label><select id="mm-ref"></select></div></div>
+  <div class="fg"><label>Match Date</label><input id="mm-date" type="date"></div>
+  <div style="background:rgba(0,200,160,.07);border:1px solid rgba(0,200,160,.2);border-radius:9px;padding:.75rem;margin-top:.5rem;font-size:.78rem;color:var(--muted)">⚡ Trigger <strong style="color:var(--teal)">trg_AddPoints</strong> fires — winner gets +3 ranking points.</div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('match-modal')">Cancel</button><button class="btn btn-gold" onclick="addMatch()">Schedule</button></div>
+</div></div>
+<div class="overlay" id="ref-modal"><div class="modal"><h3>🔖 Add Referee</h3>
+  <div class="fg"><label>Name</label><input id="rm-name" placeholder="e.g. Referee Omar"></div>
+  <div class="fg"><label>Experience Years</label><input id="rm-exp" type="number" placeholder="4" min="0"></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('ref-modal')">Cancel</button><button class="btn btn-gold" onclick="addReferee()">Add</button></div>
+</div></div>
+<div class="overlay" id="sponsor-modal"><div class="modal"><h3>💰 Add Sponsor</h3>
+  <div class="fg"><label>Sponsor Name</label><input id="sm-name" placeholder="e.g. Corsair"></div>
+  <div class="fg-row"><div class="fg"><label>Investment ($)</label><input id="sm-amount" type="number" placeholder="80000"></div><div class="fg"><label>Category</label><select id="sm-cat"><option>Electronics</option><option>Hardware</option><option>GPU</option><option>Chip</option><option>Beverage</option><option>Apparel</option><option>General</option></select></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('sponsor-modal')">Cancel</button><button class="btn btn-gold" onclick="addSponsor()">Add</button></div>
+</div></div>
+<div class="overlay" id="ann-modal"><div class="modal"><h3>📢 Post Announcement</h3>
+  <div class="fg"><label>Title</label><input id="an-title" placeholder="e.g. Registration Open"></div>
+  <div class="fg"><label>Message</label><textarea id="an-body" placeholder="Write the announcement…"></textarea></div>
+  <div class="fg"><label>Type</label><select id="an-type"><option value="event">Event</option><option value="result">Result</option><option value="sponsor">Sponsor</option><option value="update">Update</option></select></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('ann-modal')">Cancel</button><button class="btn btn-gold" onclick="addAnnouncement()">Post</button></div>
+</div></div>
+<div id="profile-overlay" onclick="closeProfile()"></div>
+<div id="profile-drawer" style="position:fixed">
+  <button class="profile-close" onclick="closeProfile()">✕</button>
+  <div class="pd-avatar" id="pd-avatar">—</div>
+  <div class="pd-name" id="pd-name"></div>
+  <div class="pd-team" id="pd-team"></div>
+  <div class="pd-stats" id="pd-stats"></div>
+  <div id="pd-details"></div>
+</div>
+<div id="toast"></div>
+<script>
+// ── DATA (mirrors the SQL schema / server.js) ────────────────────────────────
+const DB={
+  teams:[
+    {TeamID:1,TeamName:'Falcons',RankingPoints:6,Country:'Pakistan',Founded:2020,Logo:'🦅'},
+    {TeamID:2,TeamName:'Titans',RankingPoints:3,Country:'India',Founded:2019,Logo:'⚡'},
+    {TeamID:3,TeamName:'Warriors',RankingPoints:3,Country:'England',Founded:2021,Logo:'⚔️'},
+    {TeamID:4,TeamName:'Dragons',RankingPoints:3,Country:'Australia',Founded:2018,Logo:'🐉'},
+    {TeamID:5,TeamName:'Eagles',RankingPoints:3,Country:'Canada',Founded:2020,Logo:'🦉'},
+    {TeamID:6,TeamName:'Sharks',RankingPoints:3,Country:'Germany',Founded:2017,Logo:'🦈'},
+    {TeamID:7,TeamName:'Panthers',RankingPoints:3,Country:'France',Founded:2019,Logo:'🐆'},
+    {TeamID:8,TeamName:'Knights',RankingPoints:3,Country:'Brazil',Founded:2021,Logo:'🛡️'},
+    {TeamID:9,TeamName:'Wolves',RankingPoints:3,Country:'Japan',Founded:2018,Logo:'🐺'},
+    {TeamID:10,TeamName:'Storm',RankingPoints:3,Country:'USA',Founded:2016,Logo:'🌩️'},
+  ],
+  players:[
+    {PlayerID:101,PlayerName:'Ali',Age:20,TeamID:1,GameRole:'Sniper',JoinDate:'2023-01-10',Type:'Professional',Salary:50000},
+    {PlayerID:102,PlayerName:'Ahmed',Age:21,TeamID:1,GameRole:'Support',JoinDate:'2023-02-15',Type:'Professional',Salary:52000},
+    {PlayerID:103,PlayerName:'Usman',Age:22,TeamID:2,GameRole:'Assault',JoinDate:'2022-06-01',Type:'Professional',Salary:55000},
+    {PlayerID:104,PlayerName:'Bilal',Age:23,TeamID:2,GameRole:'Tank',JoinDate:'2022-08-20',Type:'Professional',Salary:60000},
+    {PlayerID:105,PlayerName:'Hamza',Age:19,TeamID:3,GameRole:'Sniper',JoinDate:'2024-01-05',Type:'Professional',Salary:45000},
+    {PlayerID:106,PlayerName:'Ayaan',Age:20,TeamID:3,GameRole:'Support',JoinDate:'2024-02-10',Type:'Professional',Salary:47000},
+    {PlayerID:107,PlayerName:'Zain',Age:24,TeamID:4,GameRole:'Assault',JoinDate:'2021-09-15',Type:'Professional',Salary:65000},
+    {PlayerID:108,PlayerName:'Saad',Age:21,TeamID:4,GameRole:'Medic',JoinDate:'2022-03-22',Type:'Professional',Salary:62000},
+    {PlayerID:109,PlayerName:'Taha',Age:22,TeamID:5,GameRole:'Scout',JoinDate:'2023-07-18',Type:'Professional',Salary:48000},
+    {PlayerID:110,PlayerName:'Daniyal',Age:23,TeamID:5,GameRole:'Sniper',JoinDate:'2023-08-30',Type:'Professional',Salary:51000},
+    {PlayerID:111,PlayerName:'John',Age:25,TeamID:6,GameRole:'Tank',JoinDate:'2020-04-12',Type:'Amateur',SchoolName:'NUTECH'},
+    {PlayerID:112,PlayerName:'David',Age:24,TeamID:6,GameRole:'Support',JoinDate:'2020-07-25',Type:'Amateur',SchoolName:'FAST'},
+    {PlayerID:113,PlayerName:'Chris',Age:20,TeamID:7,GameRole:'Assault',JoinDate:'2024-03-08',Type:'Amateur',SchoolName:'COMSATS'},
+    {PlayerID:114,PlayerName:'Alex',Age:21,TeamID:7,GameRole:'Sniper',JoinDate:'2024-04-15',Type:'Amateur',SchoolName:'NUST'},
+    {PlayerID:115,PlayerName:'Tom',Age:22,TeamID:8,GameRole:'Medic',JoinDate:'2023-11-01',Type:'Amateur',SchoolName:'UET'},
+    {PlayerID:116,PlayerName:'Harry',Age:23,TeamID:8,GameRole:'Tank',JoinDate:'2023-12-20',Type:'Amateur',SchoolName:'AIR'},
+    {PlayerID:117,PlayerName:'Jack',Age:20,TeamID:9,GameRole:'Scout',JoinDate:'2024-05-10',Type:'Amateur',SchoolName:'Bahria'},
+    {PlayerID:118,PlayerName:'Noah',Age:21,TeamID:9,GameRole:'Support',JoinDate:'2024-06-22',Type:'Amateur',SchoolName:'IIUI'},
+    {PlayerID:119,PlayerName:'Liam',Age:22,TeamID:10,GameRole:'Assault',JoinDate:'2023-05-14',Type:'Amateur',SchoolName:'QAU'},
+    {PlayerID:120,PlayerName:'James',Age:24,TeamID:10,GameRole:'Sniper',JoinDate:'2022-10-30',Type:'Amateur',SchoolName:'GIKI'},
+  ],
+  coaches:[
+    {CoachID:1,CoachName:'Coach Aslam',TeamID:1,Specialty:'Tactics',Experience:8},
+    {CoachID:2,CoachName:'Coach Imran',TeamID:2,Specialty:'Aim Training',Experience:6},
+    {CoachID:3,CoachName:'Coach Kamran',TeamID:3,Specialty:'Strategy',Experience:10},
+    {CoachID:4,CoachName:'Coach Rizwan',TeamID:4,Specialty:'Mental Coaching',Experience:5},
+    {CoachID:5,CoachName:'Coach Arif',TeamID:5,Specialty:'Tactics',Experience:7},
+    {CoachID:6,CoachName:'Coach Shahid',TeamID:6,Specialty:'Fitness',Experience:9},
+    {CoachID:7,CoachName:'Coach Noman',TeamID:7,Specialty:'Aim Training',Experience:4},
+    {CoachID:8,CoachName:'Coach Waqas',TeamID:8,Specialty:'Strategy',Experience:6},
+    {CoachID:9,CoachName:'Coach Salman',TeamID:9,Specialty:'Tactics',Experience:11},
+    {CoachID:10,CoachName:'Coach Farhan',TeamID:10,Specialty:'Fitness',Experience:3},
+  ],
+  tournaments:[
+    {TournamentID:1,TournamentName:'Summer Cup',PrizePool:10000,StartDate:'2026-01-10',Status:'Completed',Game:'Valorant',Sponsors:['Samsung','Huawei'],MatchCount:1},
+    {TournamentID:2,TournamentName:'Winter Cup',PrizePool:12000,StartDate:'2026-02-05',Status:'Completed',Game:'CS2',Sponsors:['Dell','HP'],MatchCount:1},
+    {TournamentID:3,TournamentName:'Champions League',PrizePool:15000,StartDate:'2026-03-01',Status:'Completed',Game:'Valorant',Sponsors:['Lenovo','Asus'],MatchCount:1},
+    {TournamentID:4,TournamentName:'National Cup',PrizePool:18000,StartDate:'2026-04-01',Status:'Completed',Game:'PUBG',Sponsors:['Intel','AMD'],MatchCount:1},
+    {TournamentID:5,TournamentName:'Spring Clash',PrizePool:9000,StartDate:'2026-05-01',Status:'Completed',Game:'Fortnite',Sponsors:['Nvidia','Red Bull'],MatchCount:1},
+    {TournamentID:6,TournamentName:'Autumn League',PrizePool:13000,StartDate:'2026-06-01',Status:'Ongoing',Game:'Valorant',Sponsors:['Pepsi'],MatchCount:1},
+    {TournamentID:7,TournamentName:'Pro Series',PrizePool:20000,StartDate:'2026-07-01',Status:'Upcoming',Game:'CS2',Sponsors:['Coca Cola'],MatchCount:1},
+    {TournamentID:8,TournamentName:'Elite Tournament',PrizePool:25000,StartDate:'2026-08-01',Status:'Upcoming',Game:'PUBG',Sponsors:['Nike'],MatchCount:1},
+    {TournamentID:9,TournamentName:'Masters Event',PrizePool:30000,StartDate:'2026-09-01',Status:'Upcoming',Game:'Valorant',Sponsors:['Adidas'],MatchCount:1},
+    {TournamentID:10,TournamentName:'World Finals',PrizePool:50000,StartDate:'2026-10-01',Status:'Upcoming',Game:'CS2',Sponsors:['Puma'],MatchCount:1},
+  ],
+  referees:[
+    {RefereeID:1,RefereeName:'Referee Ahmed',ExperienceYears:5,Certified:true,MatchesOfficiated:1},
+    {RefereeID:2,RefereeName:'Referee Ali',ExperienceYears:4,Certified:true,MatchesOfficiated:1},
+    {RefereeID:3,RefereeName:'Referee Bilal',ExperienceYears:6,Certified:true,MatchesOfficiated:1},
+    {RefereeID:4,RefereeName:'Referee Hamza',ExperienceYears:3,Certified:false,MatchesOfficiated:1},
+    {RefereeID:5,RefereeName:'Referee Saad',ExperienceYears:7,Certified:true,MatchesOfficiated:1},
+    {RefereeID:6,RefereeName:'Referee Ayaan',ExperienceYears:5,Certified:true,MatchesOfficiated:1},
+    {RefereeID:7,RefereeName:'Referee Zain',ExperienceYears:8,Certified:true,MatchesOfficiated:1},
+    {RefereeID:8,RefereeName:'Referee Taha',ExperienceYears:4,Certified:false,MatchesOfficiated:1},
+    {RefereeID:9,RefereeName:'Referee John',ExperienceYears:6,Certified:true,MatchesOfficiated:1},
+    {RefereeID:10,RefereeName:'Referee David',ExperienceYears:5,Certified:true,MatchesOfficiated:1},
+  ],
+  sponsors:[
+    {SponsorID:1,SponsorName:'Samsung',InvestmentAmount:100000,Category:'Electronics',TournamentsSponsored:['Summer Cup']},
+    {SponsorID:2,SponsorName:'Huawei',InvestmentAmount:90000,Category:'Electronics',TournamentsSponsored:['Summer Cup']},
+    {SponsorID:3,SponsorName:'Dell',InvestmentAmount:80000,Category:'Hardware',TournamentsSponsored:['Winter Cup']},
+    {SponsorID:4,SponsorName:'HP',InvestmentAmount:70000,Category:'Hardware',TournamentsSponsored:['Winter Cup']},
+    {SponsorID:5,SponsorName:'Lenovo',InvestmentAmount:75000,Category:'Hardware',TournamentsSponsored:['Champions League']},
+    {SponsorID:6,SponsorName:'Asus',InvestmentAmount:85000,Category:'Hardware',TournamentsSponsored:['Champions League']},
+    {SponsorID:7,SponsorName:'Intel',InvestmentAmount:120000,Category:'Chip',TournamentsSponsored:['National Cup']},
+    {SponsorID:8,SponsorName:'AMD',InvestmentAmount:110000,Category:'Chip',TournamentsSponsored:['National Cup']},
+    {SponsorID:9,SponsorName:'Nvidia',InvestmentAmount:130000,Category:'GPU',TournamentsSponsored:['Spring Clash']},
+    {SponsorID:10,SponsorName:'Red Bull',InvestmentAmount:95000,Category:'Beverage',TournamentsSponsored:['Spring Clash']},
+    {SponsorID:11,SponsorName:'Pepsi',InvestmentAmount:90000,Category:'Beverage',TournamentsSponsored:['Autumn League']},
+    {SponsorID:12,SponsorName:'Coca Cola',InvestmentAmount:100000,Category:'Beverage',TournamentsSponsored:['Pro Series']},
+    {SponsorID:13,SponsorName:'Nike',InvestmentAmount:125000,Category:'Apparel',TournamentsSponsored:['Elite Tournament']},
+    {SponsorID:14,SponsorName:'Adidas',InvestmentAmount:115000,Category:'Apparel',TournamentsSponsored:['Masters Event']},
+    {SponsorID:15,SponsorName:'Puma',InvestmentAmount:105000,Category:'Apparel',TournamentsSponsored:['World Finals']},
+  ],
+  matches:[
+    {MatchID:1,TournamentID:1,TournamentName:'Summer Cup',RefereeID:1,RefereeName:'Referee Ahmed',Team1ID:1,Team1Name:'Falcons',Team2ID:2,Team2Name:'Titans',WinnerTeamID:1,WinnerName:'Falcons',MatchDate:'2026-01-15',Duration:45,Map:'Ascent',PlayerCount:4},
+    {MatchID:2,TournamentID:2,TournamentName:'Winter Cup',RefereeID:2,RefereeName:'Referee Ali',Team1ID:3,Team1Name:'Warriors',Team2ID:4,Team2Name:'Dragons',WinnerTeamID:4,WinnerName:'Dragons',MatchDate:'2026-02-10',Duration:60,Map:'Dust2',PlayerCount:4},
+    {MatchID:3,TournamentID:3,TournamentName:'Champions League',RefereeID:3,RefereeName:'Referee Bilal',Team1ID:5,Team1Name:'Eagles',Team2ID:6,Team2Name:'Sharks',WinnerTeamID:5,WinnerName:'Eagles',MatchDate:'2026-03-05',Duration:38,Map:'Haven',PlayerCount:2},
+    {MatchID:4,TournamentID:4,TournamentName:'National Cup',RefereeID:4,RefereeName:'Referee Hamza',Team1ID:7,Team1Name:'Panthers',Team2ID:8,Team2Name:'Knights',WinnerTeamID:8,WinnerName:'Knights',MatchDate:'2026-04-08',Duration:52,Map:'Erangel',PlayerCount:2},
+    {MatchID:5,TournamentID:5,TournamentName:'Spring Clash',RefereeID:5,RefereeName:'Referee Saad',Team1ID:9,Team1Name:'Wolves',Team2ID:10,Team2Name:'Storm',WinnerTeamID:9,WinnerName:'Wolves',MatchDate:'2026-05-12',Duration:30,Map:'Tilted Towers',PlayerCount:2},
+    {MatchID:6,TournamentID:6,TournamentName:'Autumn League',RefereeID:6,RefereeName:'Referee Ayaan',Team1ID:1,Team1Name:'Falcons',Team2ID:3,Team2Name:'Warriors',WinnerTeamID:3,WinnerName:'Warriors',MatchDate:'2026-06-15',Duration:55,Map:'Split',PlayerCount:1},
+    {MatchID:7,TournamentID:7,TournamentName:'Pro Series',RefereeID:7,RefereeName:'Referee Zain',Team1ID:2,Team1Name:'Titans',Team2ID:4,Team2Name:'Dragons',WinnerTeamID:2,WinnerName:'Titans',MatchDate:'2026-07-20',Duration:48,Map:'Inferno',PlayerCount:1},
+    {MatchID:8,TournamentID:8,TournamentName:'Elite Tournament',RefereeID:8,RefereeName:'Referee Taha',Team1ID:5,Team1Name:'Eagles',Team2ID:7,Team2Name:'Panthers',WinnerTeamID:7,WinnerName:'Panthers',MatchDate:'2026-08-18',Duration:63,Map:'Miramar',PlayerCount:1},
+    {MatchID:9,TournamentID:9,TournamentName:'Masters Event',RefereeID:9,RefereeName:'Referee John',Team1ID:6,Team1Name:'Sharks',Team2ID:8,Team2Name:'Knights',WinnerTeamID:6,WinnerName:'Sharks',MatchDate:'2026-09-15',Duration:42,Map:'Bind',PlayerCount:1},
+    {MatchID:10,TournamentID:10,TournamentName:'World Finals',RefereeID:10,RefereeName:'Referee David',Team1ID:9,Team1Name:'Wolves',Team2ID:10,Team2Name:'Storm',WinnerTeamID:10,WinnerName:'Storm',MatchDate:'2026-10-20',Duration:70,Map:'Nuke',PlayerCount:2},
+  ],
+  stats:[
+    {PlayerID:101,PlayerName:'Ali',TeamName:'Falcons',GameRole:'Sniper',Kills:12,Deaths:4,Assists:6,KDA:'4.50'},
+    {PlayerID:103,PlayerName:'Usman',TeamName:'Titans',GameRole:'Assault',Kills:10,Deaths:5,Assists:4,KDA:'2.80'},
+    {PlayerID:105,PlayerName:'Hamza',TeamName:'Warriors',GameRole:'Sniper',Kills:15,Deaths:3,Assists:8,KDA:'7.67'},
+    {PlayerID:107,PlayerName:'Zain',TeamName:'Dragons',GameRole:'Assault',Kills:9,Deaths:6,Assists:5,KDA:'2.33'},
+    {PlayerID:109,PlayerName:'Taha',TeamName:'Eagles',GameRole:'Scout',Kills:14,Deaths:4,Assists:7,KDA:'5.25'},
+    {PlayerID:111,PlayerName:'John',TeamName:'Sharks',GameRole:'Tank',Kills:11,Deaths:5,Assists:6,KDA:'3.40'},
+    {PlayerID:113,PlayerName:'Chris',TeamName:'Panthers',GameRole:'Assault',Kills:8,Deaths:7,Assists:3,KDA:'1.57'},
+    {PlayerID:115,PlayerName:'Tom',TeamName:'Knights',GameRole:'Medic',Kills:16,Deaths:2,Assists:9,KDA:'12.50'},
+    {PlayerID:117,PlayerName:'Jack',TeamName:'Wolves',GameRole:'Scout',Kills:13,Deaths:4,Assists:5,KDA:'4.50'},
+    {PlayerID:119,PlayerName:'Liam',TeamName:'Storm',GameRole:'Assault',Kills:18,Deaths:3,Assists:10,KDA:'9.33'},
+  ],
+  announcements:[
+    {id:1,title:'World Finals Registration Open',body:'Teams can now register for the World Finals 2026. Prize pool: $50,000.',date:'2026-06-01',type:'event'},
+    {id:2,title:'Falcons Win Summer Cup!',body:'Team Falcons claimed the Summer Cup title defeating Titans 2-1.',date:'2026-01-16',type:'result'},
+    {id:3,title:'New Sponsor: Nvidia Joins ETMS',body:'Nvidia has signed a $130,000 sponsorship deal for the Masters Event.',date:'2026-04-10',type:'sponsor'},
+    {id:4,title:'Pro Series Format Updated',body:'Pro Series will now use a double-elimination bracket format.',date:'2026-05-20',type:'update'},
+  ],
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const tn=id=>DB.teams.find(t=>t.TeamID===id)?.TeamName||'N/A';
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className=err?'err':'';t.style.display='block';setTimeout(()=>t.style.display='none',3000)}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const btn=[...document.querySelectorAll('.nav-btn')].find(b=>b.getAttribute('onclick')?.includes("'"+name+"'"));
+  if(btn)btn.classList.add('active');
+  const titles={dashboard:'Dashboard',news:'Announcements',leaderboard:'Leaderboard',tournaments:'Tournaments',matches:'Matches',teams:'Teams',players:'Players',coaches:'Coaches',referees:'Referees',sponsors:'Sponsors',statistics:'Player Statistics',teamstats:'Team Analysis',about:'About'};
+  document.getElementById('topbar-title').textContent=titles[name]||name;
+  renderPage(name);
+}
+function renderPage(n){
+  ({dashboard:renderDash,news:renderNews,leaderboard:renderLB,tournaments:renderTours,
+    matches:renderMatches,teams:renderTeams,players:renderPlayers,coaches:renderCoaches,
+    referees:renderRefs,sponsors:renderSponsors,statistics:renderStats,teamstats:renderTS,about:()=>{}})[n]?.();
+}
+
+// DASHBOARD
+function renderDash(){
+  document.getElementById('k-teams').textContent=DB.teams.length;
+  document.getElementById('k-players').textContent=DB.players.length;
+  document.getElementById('k-matches').textContent=DB.matches.length;
+  document.getElementById('k-tours').textContent=DB.tournaments.length;
+  document.getElementById('dash-matches').innerHTML=DB.matches.slice(0,4).map(matchCard).join('');
+  document.getElementById('dash-news').innerHTML=DB.announcements.slice(0,4).map(annCard).join('');
+}
+
+// ANN
+function annCard(a){
+  const dots={event:'var(--indigo)',result:'var(--teal)',sponsor:'var(--gold)',update:'var(--muted)'};
+  return `<div class="ann-card"><div class="ann-dot" style="background:${dots[a.type]||dots.update}"></div><div style="flex:1"><div class="ann-title">${a.title}</div><div class="ann-body">${a.body}</div><div class="ann-foot"><span class="badge badge-${a.type}">${a.type}</span><span class="ann-date">📅 ${a.date}</span></div></div></div>`;
+}
+function renderNews(){document.getElementById('ann-list').innerHTML=DB.announcements.map(annCard).join('')}
+function addAnnouncement(){
+  const t=document.getElementById('an-title').value.trim(),b=document.getElementById('an-body').value.trim();
+  if(!t||!b){toast('Fill all fields',true);return;}
+  DB.announcements.unshift({id:DB.announcements.length+1,title:t,body:b,type:document.getElementById('an-type').value,date:new Date().toISOString().split('T')[0]});
+  closeModal('ann-modal');document.getElementById('an-title').value='';document.getElementById('an-body').value='';
+  toast('Announcement posted!');renderNews();
+}
+
+// LEADERBOARD
+function renderLB(){
+  const sorted=[...DB.teams].sort((a,b)=>b.RankingPoints-a.RankingPoints);
+  const maxPts=Math.max(...sorted.map(t=>t.RankingPoints),1);
+  document.getElementById('lb-list').innerHTML=sorted.map((t,i)=>{
+    const cls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const rk=i===0?'rk-1':i===1?'rk-2':i===2?'rk-3':'rk-n';
+    const wins=DB.matches.filter(m=>m.WinnerTeamID===t.TeamID).length;
+    const losses=DB.matches.filter(m=>(m.Team1ID===t.TeamID||m.Team2ID===t.TeamID)&&m.WinnerTeamID!==t.TeamID).length;
+    const coach=DB.coaches.find(c=>c.TeamID===t.TeamID)?.CoachName||'—';
+    const pc=DB.players.filter(p=>p.TeamID===t.TeamID).length;
+    return `<div class="lb-card ${cls}"><span class="rk ${rk}">${i+1}</span><div class="lb-logo">${t.Logo}</div><div class="lb-info"><div class="lb-name">${t.TeamName}</div><div class="lb-sub">${t.Country} · ${pc} players · ${coach}</div><div style="display:flex;align-items:center;gap:.75rem;margin-top:.4rem"><div class="pts-bar"><div class="pts-fill" style="width:${(t.RankingPoints/maxPts*100).toFixed(0)}%"></div></div></div></div><div style="text-align:right"><div class="lb-pts">${t.RankingPoints} pts</div><div class="lb-wl">W:${wins} / L:${losses}</div></div></div>`;
+  }).join('');
+}
+
+// TOURNAMENTS
+let tourFilter='All';
+function filterTours(f,btn){tourFilter=f;document.querySelectorAll('#tour-tabs .tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderTours()}
+function renderTours(){
+  const list=tourFilter==='All'?DB.tournaments:DB.tournaments.filter(t=>t.Status===tourFilter);
+  document.getElementById('tour-cards').innerHTML=list.map(t=>`
+    <div class="tour-card"><div class="tour-banner"><div class="tour-game">🎮 ${t.Game}</div><div class="tour-name">${t.TournamentName}</div><div class="tour-prize">$${t.PrizePool.toLocaleString()}</div></div>
+    <div class="tour-body"><div class="tour-meta"><div class="tour-meta-item">📅 <span>${t.StartDate}</span></div><div class="tour-meta-item">⚔️ <span>${t.MatchCount} matches</span></div></div>
+    <div style="margin-bottom:.6rem"><span class="badge badge-${t.Status.toLowerCase()}">${t.Status}</span></div>
+    <div class="tour-sponsors"><strong style="color:var(--muted)">Sponsors:</strong> ${t.Sponsors.join(', ')||'None'}</div>
+    <div class="card-actions"><button class="btn btn-rose btn-sm" onclick="delTour(${t.TournamentID})">Delete</button></div></div></div>`).join('');
+}
+function addTournament(){
+  const n=document.getElementById('to-name').value.trim(),p=document.getElementById('to-prize').value;
+  if(!n||!p){toast('Fill required fields',true);return;}
+  DB.tournaments.push({TournamentID:DB.tournaments.length+11,TournamentName:n,PrizePool:parseFloat(p),StartDate:document.getElementById('to-date').value,Status:document.getElementById('to-status').value,Game:document.getElementById('to-game').value,Sponsors:[],MatchCount:0});
+  closeModal('tour-modal');toast('Tournament added!');renderTours();
+}
+function delTour(id){if(!confirm('Delete?'))return;const i=DB.tournaments.findIndex(t=>t.TournamentID===id);if(i>-1)DB.tournaments.splice(i,1);toast('Deleted');renderTours()}
+
+// MATCHES
+function matchCard(m){
+  return `<div class="match-card"><div class="match-top"><span class="mt-tour">🎯 ${m.TournamentName}</span><span class="mt-date">📅 ${m.MatchDate}</span></div><div class="match-body"><div class="vs-row"><div class="vs-team"><div class="vs-team-name">${m.Team1Name} ${m.WinnerTeamID===m.Team1ID?'🏆':''}</div><div class="vs-team-sub">Team 1</div></div><div class="vs-divider">VS</div><div class="vs-team"><div class="vs-team-name">${m.WinnerTeamID===m.Team2ID?'🏆':''} ${m.Team2Name}</div><div class="vs-team-sub">Team 2</div></div></div></div><div class="match-footer"><span class="mf-info">🗺️ ${m.Map} · 🕐 ${m.Duration}min · 👥 ${m.PlayerCount}</span><span class="badge badge-win">Winner: ${m.WinnerName}</span></div></div>`;
+}
+function renderMatches(){
+  document.getElementById('match-cards').innerHTML=DB.matches.map(matchCard).join('');
+  const ts=DB.teams.map(t=>`<option value="${t.TeamID}">${t.TeamName}</option>`).join('');
+  document.getElementById('mm-t1').innerHTML=ts;document.getElementById('mm-t2').innerHTML=ts;document.getElementById('mm-winner').innerHTML=ts;
+  document.getElementById('mm-tour').innerHTML=DB.tournaments.map(t=>`<option value="${t.TournamentID}">${t.TournamentName}</option>`).join('');
+  document.getElementById('mm-ref').innerHTML=DB.referees.map(r=>`<option value="${r.RefereeID}">${r.RefereeName}</option>`).join('');
+}
+function addMatch(){
+  const t1=parseInt(document.getElementById('mm-t1').value),t2=parseInt(document.getElementById('mm-t2').value);
+  if(t1===t2){toast('Teams must be different (BR-07)',true);return;}
+  const wid=parseInt(document.getElementById('mm-winner').value);
+  const wname=DB.teams.find(t=>t.TeamID===wid)?.TeamName;
+  // TRIGGER simulation
+  const winner=DB.teams.find(t=>t.TeamID===wid);
+  if(winner){winner.RankingPoints+=3;}
+  DB.matches.push({MatchID:DB.matches.length+11,TournamentID:parseInt(document.getElementById('mm-tour').value),TournamentName:DB.tournaments.find(t=>t.TournamentID===parseInt(document.getElementById('mm-tour').value))?.TournamentName,RefereeID:parseInt(document.getElementById('mm-ref').value),RefereeName:DB.referees.find(r=>r.RefereeID===parseInt(document.getElementById('mm-ref').value))?.RefereeName,Team1ID:t1,Team1Name:DB.teams.find(t=>t.TeamID===t1)?.TeamName,Team2ID:t2,Team2Name:DB.teams.find(t=>t.TeamID===t2)?.TeamName,WinnerTeamID:wid,WinnerName:wname,MatchDate:document.getElementById('mm-date').value,Duration:0,Map:document.getElementById('mm-map').value||'—',PlayerCount:0});
+  closeModal('match-modal');toast('⚡ Match added! +3 pts → '+wname);renderMatches();
+}
+
+// TEAMS
+function renderTeams(){
+  document.getElementById('team-cards').innerHTML=DB.teams.map(t=>{
+    const pc=DB.players.filter(p=>p.TeamID===t.TeamID).length;
+    const wins=DB.matches.filter(m=>m.WinnerTeamID===t.TeamID).length;
+    const coach=DB.coaches.find(c=>c.TeamID===t.TeamID)?.CoachName||'—';
+    return `<div class="card"><div class="card-head"><div class="card-icon">${t.Logo}</div><div><div class="card-name">${t.TeamName}</div><div class="card-sub">🌍 ${t.Country}</div></div></div><div class="card-meta"><div class="meta-item">🏆 Pts: <span>${t.RankingPoints}</span></div><div class="meta-item">👥 Players: <span>${pc}</span></div><div class="meta-item">⚔️ Wins: <span>${wins}</span></div><div class="meta-item">📅 Founded: <span>${t.Founded}</span></div><div class="meta-item">🎓 Coach: <span>${coach}</span></div></div><div class="card-actions"><button class="btn btn-rose btn-sm" onclick="delTeam(${t.TeamID})">Delete Team</button></div></div>`;
+  }).join('');
+  document.getElementById('pm-team').innerHTML=DB.teams.map(t=>`<option value="${t.TeamID}">${t.TeamName}</option>`).join('');
+}
+function addTeam(){
+  const n=document.getElementById('tm-name').value.trim(),c=document.getElementById('tm-country').value.trim();
+  if(!n||!c){toast('Name and country required',true);return;}
+  DB.teams.push({TeamID:DB.teams.length+11,TeamName:n,RankingPoints:0,Country:c,Founded:parseInt(document.getElementById('tm-founded').value)||2024,Logo:document.getElementById('tm-logo').value||'🎮'});
+  closeModal('team-modal');['tm-name','tm-country','tm-founded','tm-logo'].forEach(id=>document.getElementById(id).value='');
+  toast('Team added!');renderTeams();
+}
+function delTeam(id){if(!confirm('Delete team and cascade?'))return;DB.teams=DB.teams.filter(t=>t.TeamID!==id);DB.players=DB.players.filter(p=>p.TeamID!==id);toast('Team deleted (cascade)');renderTeams()}
+
+// PLAYERS
+let playerFilter='All';
+function filterPlayers(f,btn){playerFilter=f;document.querySelectorAll('#page-players .tabs .tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderPlayers()}
+function renderPlayers(){
+  const list=playerFilter==='All'?DB.players:DB.players.filter(p=>p.Type===playerFilter);
+  document.getElementById('player-cards').innerHTML=list.map(p=>{
+    const s=DB.stats.find(x=>x.PlayerID===p.PlayerID);
+    return `<div class="player-card" onclick="openProfile(${p.PlayerID})" style="cursor:pointer"><div class="pc-top"><div class="pc-avatar">${p.PlayerName.charAt(0)}</div><div><div class="pc-name">${p.PlayerName}</div><div class="pc-role">🎮 ${p.GameRole} · ${tn(p.TeamID)}</div><div style="margin-top:.3rem"><span class="badge ${p.Type==='Professional'?'badge-pro':'badge-ama'}">${p.Type}</span></div></div></div><div class="pc-stats"><div class="pc-stat"><div class="v">${s?.Kills||0}</div><div class="l">Kills</div></div><div class="pc-stat"><div class="v">${s?.KDA||'—'}</div><div class="l">KDA</div></div><div class="pc-stat"><div class="v">${p.Age}</div><div class="l">Age</div></div></div></div>`;
+  }).join('');
+}
+function openProfile(pid){
+  const p=DB.players.find(x=>x.PlayerID===pid);if(!p)return;
+  const s=DB.stats.find(x=>x.PlayerID===pid);
+  document.getElementById('pd-avatar').textContent=p.PlayerName.charAt(0);
+  document.getElementById('pd-name').textContent=p.PlayerName;
+  document.getElementById('pd-team').textContent=tn(p.TeamID)+' · '+p.GameRole;
+  document.getElementById('pd-stats').innerHTML=`<div class="pd-stat"><div class="v">${s?.Kills||0}</div><div class="l">Kills</div></div><div class="pd-stat"><div class="v">${s?.Deaths||0}</div><div class="l">Deaths</div></div><div class="pd-stat"><div class="v">${s?.KDA||'—'}</div><div class="l">KDA</div></div>`;
+  document.getElementById('pd-details').innerHTML=`<div class="pd-section">Player Info</div><div class="pd-row"><span class="lbl">Age</span><span>${p.Age}</span></div><div class="pd-row"><span class="lbl">Type</span><span class="badge ${p.Type==='Professional'?'badge-pro':'badge-ama'}">${p.Type}</span></div><div class="pd-row"><span class="lbl">${p.Type==='Professional'?'Salary':'School'}</span><span>${p.Type==='Professional'?'$'+p.Salary?.toLocaleString():p.SchoolName}</span></div><div class="pd-row"><span class="lbl">Join Date</span><span>${p.JoinDate}</span></div><div class="pd-row"><span class="lbl">Assists</span><span>${s?.Assists||0}</span></div>`;
+  document.getElementById('profile-overlay').classList.add('open');
+  document.getElementById('profile-drawer').classList.add('open');
+}
+function closeProfile(){document.getElementById('profile-overlay').classList.remove('open');document.getElementById('profile-drawer').classList.remove('open')}
+function togglePlayerFields(){const t=document.getElementById('pm-type').value;document.getElementById('pm-pro').style.display=t==='Professional'?'':'none';document.getElementById('pm-ama').style.display=t==='Amateur'?'':'none'}
+function addPlayer(){
+  const n=document.getElementById('pm-name').value.trim(),tid=document.getElementById('pm-team').value;
+  if(!n||!tid){toast('Name and team required',true);return;}
+  const id=200+DB.players.length;
+  DB.players.push({PlayerID:id,PlayerName:n,Age:parseInt(document.getElementById('pm-age').value)||18,TeamID:parseInt(tid),GameRole:document.getElementById('pm-role').value,JoinDate:document.getElementById('pm-join').value||new Date().toISOString().split('T')[0],Type:document.getElementById('pm-type').value,Salary:parseFloat(document.getElementById('pm-salary').value)||0,SchoolName:document.getElementById('pm-school').value});
+  closeModal('player-modal');toast('Player added!');renderPlayers();
+}
+
+// COACHES
+function renderCoaches(){
+  document.getElementById('coach-cards').innerHTML=DB.coaches.map(c=>{
+    const pc=DB.players.filter(p=>p.TeamID===c.TeamID).length;
+    return `<div class="coach-card"><div class="cc-top"><div class="cc-avatar">${c.CoachName.split(' ').pop().charAt(0)}</div><div><div class="cc-name">${c.CoachName}</div><div class="cc-team">🛡️ ${tn(c.TeamID)} · ${pc} players</div></div></div><div class="cc-meta"><div class="meta-item">🎯 <span>${c.Specialty}</span></div><div class="meta-item">📅 Exp: <span>${c.Experience} yrs</span></div></div></div>`;
+  }).join('');
+}
+
+// REFEREES
+function renderRefs(){
+  document.getElementById('ref-cards').innerHTML=DB.referees.map(r=>{
+    const stars='⭐'.repeat(Math.min(Math.floor(r.ExperienceYears/2),5));
+    return `<div class="ref-card"><div class="rc-top"><div class="cc-avatar" style="background:linear-gradient(135deg,var(--gold),#d97706)">${r.RefereeName.split(' ').pop().charAt(0)}</div><div><div class="rc-name">${r.RefereeName}</div><div class="rc-exp">${r.ExperienceYears} yrs · ${r.MatchesOfficiated} matches officiated</div></div></div><div style="display:flex;justify-content:space-between;align-items:center"><div class="stars">${stars||'—'}</div><span class="badge ${r.Certified?'badge-win':'badge-ama'}">${r.Certified?'✓ Certified':'Uncertified'}</span></div></div>`;
+  }).join('');
+}
+function addReferee(){
+  const n=document.getElementById('rm-name').value.trim();if(!n){toast('Name required',true);return;}
+  DB.referees.push({RefereeID:DB.referees.length+11,RefereeName:n,ExperienceYears:parseInt(document.getElementById('rm-exp').value)||0,Certified:false,MatchesOfficiated:0});
+  closeModal('ref-modal');toast('Referee added!');renderRefs();
+}
+
+// SPONSORS
+function renderSponsors(){
+  const max=Math.max(...DB.sponsors.map(s=>s.InvestmentAmount));
+  document.getElementById('sponsor-cards').innerHTML=DB.sponsors.map(s=>`<div class="sponsor-card"><div class="sc-head"><div><div class="sc-name">${s.SponsorName}</div><div class="sc-cat">🏷️ ${s.Category}</div></div><div style="text-align:right"><div class="sc-amount">$${(s.InvestmentAmount/1000).toFixed(0)}K</div></div></div><div class="bar-wrap"><div class="bar-fill" style="width:${(s.InvestmentAmount/max*100).toFixed(0)}%"></div></div><div class="sc-tours">🎯 ${s.TournamentsSponsored.length?s.TournamentsSponsored.join(', '):'No tournaments yet'}</div></div>`).join('');
+}
+function addSponsor(){
+  const n=document.getElementById('sm-name').value.trim(),a=document.getElementById('sm-amount').value;
+  if(!n||!a){toast('Fill required fields',true);return;}
+  DB.sponsors.push({SponsorID:DB.sponsors.length+11,SponsorName:n,InvestmentAmount:parseFloat(a),Category:document.getElementById('sm-cat').value,TournamentsSponsored:[]});
+  closeModal('sponsor-modal');toast('Sponsor added!');renderSponsors();
+}
+
+// STATS
+function renderStats(){
+  const sorted=[...DB.stats].sort((a,b)=>parseFloat(b.KDA)-parseFloat(a.KDA));
+  const maxK=Math.max(...sorted.map(s=>s.Kills));
+  document.getElementById('perf-body').innerHTML=sorted.map((s,i)=>`<tr><td><span class="rk ${i===0?'rk-1':i===1?'rk-2':i===2?'rk-3':'rk-n'}">${i+1}</span></td><td><strong>${s.PlayerName}</strong></td><td>${s.TeamName}</td><td><span class="badge badge-ama">${s.GameRole}</span></td><td style="color:var(--teal)"><strong>${s.Kills}</strong><div class="bar-wrap" style="max-width:80px"><div class="bar-fill" style="width:${(s.Kills/maxK*100).toFixed(0)}%"></div></div></td><td style="color:var(--rose)">${s.Deaths}</td><td style="color:var(--indigo)">${s.Assists}</td><td><strong style="color:var(--gold)">${s.KDA}</strong></td></tr>`).join('');
+}
+
+// TEAM STATS
+function renderTS(){
+  const rows=DB.teams.map(t=>{
+    const pids=DB.players.filter(p=>p.TeamID===t.TeamID).map(p=>p.PlayerID);
+    const ss=DB.stats.filter(s=>pids.includes(s.PlayerID));
+    const tk=ss.reduce((a,b)=>a+b.Kills,0),ta=ss.reduce((a,b)=>a+b.Assists,0);
+    return `<tr><td><strong>${t.Logo} ${t.TeamName}</strong></td><td>${pids.length}</td><td style="color:var(--teal);font-weight:700">${tk}</td><td style="color:var(--indigo)">${ta}</td><td style="color:var(--gold)">${ss.length?(tk/ss.length).toFixed(1):0}</td><td><strong style="color:var(--gold)">${t.RankingPoints} pts</strong></td></tr>`;
+  }).sort((a,b)=>parseInt(b.querySelector('td:nth-child(3)').textContent)-parseInt(a.querySelector('td:nth-child(3)').textContent));
+  document.getElementById('ts-body').innerHTML=[...rows].map(r=>r.outerHTML).join('');
+}
+
+// SEARCH
+function globalSearch(q){
+  const sr=document.getElementById('search-results');
+  if(q.length<2){sr.classList.remove('open');return;}
+  const ql=q.toLowerCase();
+  const teams=DB.teams.filter(t=>t.TeamName.toLowerCase().includes(ql)||t.Country.toLowerCase().includes(ql));
+  const players=DB.players.filter(p=>p.PlayerName.toLowerCase().includes(ql));
+  const tours=DB.tournaments.filter(t=>t.TournamentName.toLowerCase().includes(ql)||t.Game.toLowerCase().includes(ql));
+  const total=teams.length+players.length+tours.length;
+  if(!total){sr.innerHTML='<div class="sr-item">No results found</div>';sr.classList.add('open');return;}
+  let html='';
+  if(teams.length){html+='<div class="sr-group">Teams</div>'+teams.map(t=>`<div class="sr-item" onclick="showPage('teams')">${t.Logo} ${t.TeamName} — ${t.Country}</div>`).join('')}
+  if(players.length){html+='<div class="sr-group">Players</div>'+players.map(p=>`<div class="sr-item" onclick="openProfile(${p.PlayerID})">${p.PlayerName} · ${tn(p.TeamID)}</div>`).join('')}
+  if(tours.length){html+='<div class="sr-group">Tournaments</div>'+tours.map(t=>`<div class="sr-item" onclick="showPage('tournaments')">${t.TournamentName} · ${t.Game}</div>`).join('')}
+  sr.innerHTML=html;sr.classList.add('open');
+}
+
+renderDash();
+</script>
+</body>
+</html>
